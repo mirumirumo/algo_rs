@@ -6,6 +6,7 @@ use std::{
 #[derive(Debug)]
 struct Node<T> {
     element: T,
+    prev: Option<Arc<Mutex<Node<T>>>>,
     next: Option<Arc<Mutex<Node<T>>>>,
 }
 
@@ -33,20 +34,22 @@ impl<T: Debug> List<T> {
     pub fn push(&mut self, element: T) {
         let new_node = Arc::new(Mutex::new(Node {
             element,
+            prev: None,
             next: self.head.take(),
         }));
-        self.head = Some(new_node.clone());
-
-        if self.size == 0 {
-            self.tail = Some(new_node.clone());
+        match self.head.take() {
+            None => {
+                self.tail = Some(new_node.clone());
+            }
+            Some(old_head) => {
+                old_head.lock().unwrap().prev = Some(new_node.clone());
+            }
         }
+        self.head = Some(new_node.clone());
         self.size += 1;
     }
 
     pub fn pop(&mut self) -> Option<T> {
-        if self.size == 0 {
-            return None;
-        }
         if self.size == 1 {
             self.tail = None;
         }
@@ -54,6 +57,9 @@ impl<T: Debug> List<T> {
             None => None,
             Some(old_head) => {
                 self.head = old_head.lock().unwrap().next.clone();
+                if let Some(ref head) = self.head {
+                    head.lock().unwrap().prev = None;
+                }
                 self.size -= 1;
                 match Arc::try_unwrap(old_head) {
                     Ok(node) => Some(node.into_inner().unwrap().element),
@@ -62,12 +68,14 @@ impl<T: Debug> List<T> {
             }
         }
     }
+
     pub fn add(&mut self, element: T) {
         let new_node = Arc::new(Mutex::new(Node {
             element,
+            prev: self.tail.take(),
             next: None,
         }));
-        match self.tail.take() {
+        match new_node.lock().unwrap().prev.clone() {
             None => {
                 self.head = Some(new_node.clone());
                 self.tail = Some(new_node.clone());
