@@ -1,6 +1,7 @@
 mod container;
-mod linkedList;
+use container::{linkedList::List, uf::UnionFind};
 fn main() {
     println!("Hello, world!");
-    let uf = container::UnionFind::new(10);
+    let uf = UnionFind::new(10);
+    let mut linked_list = List::<isize>::new();
 }
