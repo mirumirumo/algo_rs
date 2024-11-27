@@ -1,3 +1,6 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
 //define Deque
 pub struct Deque<T> {
     buffer: Vec<Option<T>>,
@@ -58,4 +61,18 @@ impl<T> Deque<T> {
     pub fn clear(&mut self) {
         todo!()
     }
+}
+
+//Deque for linked list
+struct Node<T> {
+    item: T,
+    prev: RefCell<Link<T>>,
+    next: RefCell<Link<T>>,
+}
+type Link<T> = Option<Rc<Node<T>>>;
+
+struct LinkedDeq<T> {
+    front: Link<T>,
+    end: Link<T>,
+    size: usize,
 }
