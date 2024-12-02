@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::ptr;
 use std::rc::Rc;
 
 //define Deque
@@ -75,4 +76,51 @@ struct LinkedDeq<T> {
     front: Link<T>,
     end: Link<T>,
     size: usize,
+}
+
+impl<T> LinkedDeq<T> {
+    fn new() -> Self {
+        LinkedDeq {
+            front: None,
+            end: None,
+            size: 0,
+        }
+    }
+    fn push_back(&mut self, x: T) {
+        let new_node = Rc::new(Node {
+            item: x,
+            prev: RefCell::new(None),
+            next: RefCell::new(None),
+        });
+        if self.size == 0 {
+            self.front = Some(new_node.clone());
+        } else {
+            let node = self.end.take().unwrap();
+            let mut ptr1 = node.next.borrow_mut();
+            *ptr1 = Some(new_node.clone());
+            let mut ptr2 = new_node.prev.borrow_mut();
+            *ptr2 = Some(node.clone());
+        }
+        self.end = Some(new_node);
+        self.size += 1;
+    }
+
+    fn push_front(&mut self, x: T) {
+        let new_node = Rc::new(Node {
+            item: x,
+            prev: RefCell::new(None),
+            next: RefCell::new(None),
+        });
+        if self.size == 0 {
+            self.end = Some(new_node.clone());
+        } else {
+            let node = self.front.take().unwrap();
+            let mut pt1 = node.prev.borrow_mut();
+            *pt1 = Some(new_node.clone());
+            let mut pt2 = new_node.next.borrow_mut();
+            *pt2 = Some(node.clone());
+        }
+        self.end = Some(new_node);
+        self.size += 1;
+    }
 }
